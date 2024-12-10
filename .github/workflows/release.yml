@@ -1,0 +1,43 @@
+name: Maven Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 设置 Java 环境
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+
+      # 缓存 Maven 依赖
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      # 构建项目并创建 Release
+      - name: Build with Maven
+        run: mvn clean package
+
+      # 获取所有目标目录下的资产
+      - name: List and Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            target/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
