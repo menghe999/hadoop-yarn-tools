@@ -11,7 +11,7 @@
 
 格式1
 ```shell
-java -jar -Dloader.path=lib hadoop-yarn-tools--*.jar \
+java -jar -Dloader.path=lib hadoop-yarn-tools-*.jar \
 --appid <appid> \
 --user <yarn_application_user> \
 --yarn_config_dir <yarn_config_dir> \
@@ -20,7 +20,7 @@ java -jar -Dloader.path=lib hadoop-yarn-tools--*.jar \
 
 格式2（kerberos）
 ```shell
-java -jar -Dloader.path=lib hadoop-yarn-tools--*.jar \
+java -jar -Dloader.path=lib hadoop-yarn-tools-*.jar \
 --appid <appid> \
 --user <yarn_application_user> \
 --yarn_config_dir <yarn_config_dir> \
@@ -44,7 +44,7 @@ java -jar -Dloader.path=lib hadoop-yarn-tools--*.jar \
 
 参考1
 ```shell
-/usr/java/jdk1.8.0_231-amd64/bin/java -jar -Dloader.path=lib hadoop-yarn-tools--*.jar \
+/usr/java/jdk1.8.0_231-amd64/bin/java -jar -Dloader.path=lib hadoop-yarn-tools-*.jar \
 --appid application_1725270875614_0197 \
 --user hdfs \
 --yarn_config_dir /home/dev/hadoop-yarn-tools/yarn_conf \
@@ -53,7 +53,7 @@ java -jar -Dloader.path=lib hadoop-yarn-tools--*.jar \
 
 参考2
 ```shell
-/usr/java/jdk1.8.0_231-amd64/bin/java -jar -Dloader.path=lib hadoop-yarn-tools--*.jar \
+/usr/java/jdk1.8.0_231-amd64/bin/java -jar -Dloader.path=lib hadoop-yarn-tools-*.jar \
 --appid application_1722940168678_16065 \
 --user cc_test \
 --yarn_config_dir /home/dev/hadoop-yarn-tools/cdh5_conf \
@@ -62,7 +62,7 @@ java -jar -Dloader.path=lib hadoop-yarn-tools--*.jar \
 
 参考3 kerberos安全
 ```shell
-/usr/java/jdk1.8.0_231-amd64/bin/java -jar -Dloader.path=lib hadoop-yarn-tools--*.jar \
+/usr/java/jdk1.8.0_231-amd64/bin/java -jar -Dloader.path=lib hadoop-yarn-tools-*.jar \
 --appid application_1724810243358_0011 \
 --user dev \
 --yarn_config_dir /home/dev/hadoop-yarn-tools/cdh6_conf \
