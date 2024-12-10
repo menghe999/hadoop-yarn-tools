@@ -35,7 +35,7 @@ jobs:
 
       # 获取所有目标目录下的资产
       - name: List and Upload Release Assets
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         with:
           files: |
             target/*.zip
