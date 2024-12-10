@@ -35,9 +35,12 @@ jobs:
 
       # 获取所有目标目录下的资产
       - name: List and Upload Release Assets
-        uses: actions/upload-release-asset@v1
-        with:
-          files: |
-            target/*.zip
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          draft: false
+          files: |
+            target/*.zip
