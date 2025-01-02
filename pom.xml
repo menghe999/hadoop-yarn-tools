@@ -81,7 +81,7 @@
             <manifest>
               <addClasspath>true</addClasspath>
               <classpathPrefix>lib/</classpathPrefix>
-              <mainClass>com.example.YarnLogs</mainClass>
+              <mainClass>com.example.YARNInteractiveClient</mainClass>
             </manifest>
           </archive>
           <classesDirectory>${project.build.outputDirectory}</classesDirectory>
