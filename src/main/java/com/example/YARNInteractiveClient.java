@@ -12,6 +12,8 @@ import org.apache.hadoop.yarn.logaggregation.LogCLIHelpers;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
+import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 
 public class YARNInteractiveClient {
@@ -111,8 +113,12 @@ public class YARNInteractiveClient {
 
     private static void executeYarnCommand(Configuration conf, String command) {
         String[] tokens = command.split(" ");
+        if (tokens.length == 1 && tokens[0].equalsIgnoreCase("help")) {
+            printHelp(); // 如果输入的是 "help"，直接打印帮助信息
+            return;
+        }
         if (tokens.length < 2 || !tokens[0].equals("yarn")) {
-            System.out.println("Invalid command. Commands must start with 'yarn'.");
+            System.out.println("Invalid command. Commands must start with 'yarn'. input 'help' for more information.");
             return;
         }
 
@@ -138,14 +144,14 @@ public class YARNInteractiveClient {
 
     private static void handleApplicationCommand(String[] tokens) {
         if (tokens.length < 3) {
-            System.out.println("Usage: yarn application -list | -status <application_id> | -kill <application_id>");
+            System.out.println("Usage: yarn application -list [-appStates <states>] | -status <application_id> | -kill <application_id>");
             return;
         }
 
         String subCommand = tokens[2];
         switch (subCommand) {
             case "-list":
-                listApplications();
+                listApplications(tokens);
                 break;
             case "-status":
                 if (tokens.length < 4) {
@@ -216,18 +222,49 @@ public class YARNInteractiveClient {
         }
     }
 
-    private static void listApplications() {
+    private static void listApplications(String[] tokens) {
         try {
-            List<ApplicationReport> apps = yarnClient.getApplications();
+            // 默认获取所有状态的应用程序
+            EnumSet<YarnApplicationState> appStates = EnumSet.allOf(YarnApplicationState.class);
+
+            // 检查是否有 -appStates 参数
+            for (int i = 3; i < tokens.length; i++) {
+                if (tokens[i].equals("-appStates") && i + 1 < tokens.length) {
+                    appStates = parseAppStates(tokens[i + 1]);
+                    break;
+                }
+            }
+
+            // 获取应用程序列表
+            List<ApplicationReport> apps = yarnClient.getApplications(appStates);
             System.out.println("Applications:");
             for (ApplicationReport app : apps) {
                 System.out.println("ID: " + app.getApplicationId() +
                         ", Name: " + app.getName() +
+                        ", User: " + app.getUser() +
+                        ", StartTime: " + new Date(app.getStartTime()) +
+                        ", FinishTime: " + new Date(app.getFinishTime()) +
+                        ", ApplicationType: " + app.getApplicationType() +
+                        ", Queue: " + app.getQueue() +
+                        ", OriginalTrackingUrl: " + app.getOriginalTrackingUrl() +
                         ", State: " + app.getYarnApplicationState());
             }
         } catch (YarnException | IOException e) {
             System.err.println("Failed to list applications: " + e.getMessage());
         }
+    }
+
+    private static EnumSet<YarnApplicationState> parseAppStates(String states) {
+        EnumSet<YarnApplicationState> appStates = EnumSet.noneOf(YarnApplicationState.class);
+        String[] stateArray = states.split(",");
+        for (String state : stateArray) {
+            try {
+                appStates.add(YarnApplicationState.valueOf(state.trim().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                System.err.println("Invalid application state: " + state);
+            }
+        }
+        return appStates;
     }
 
     private static void getApplicationStatus(String appIdStr) {
@@ -303,12 +340,13 @@ public class YARNInteractiveClient {
 
     private static void printHelp() {
         System.out.println("Available commands:");
-        System.out.println("  yarn application -list - List all applications");
+        System.out.println("  yarn application -list [-appStates <states>] - List applications (optionally filter by states)");
+        System.out.println("    <states>: Comma-separated list of application states (e.g., RUNNING, FINISHED, FAILED)");
         System.out.println("  yarn application -status <application_id> - Get application status");
         System.out.println("  yarn application -kill <application_id> - Kill an application");
         System.out.println("  yarn node -list - List all nodes");
         System.out.println("  yarn queue -status <queue_name> - Get queue status");
-        System.out.println("  yarn logs -applicationId <application_id> [> <file_path>] - Get application logs (optionally save to file)");
+        System.out.println("  yarn logs -applicationId <application_id> > <log_file_path> - Get application logs, only finished or failed application support");
         System.out.println("  exit - Exit the program");
     }
 }

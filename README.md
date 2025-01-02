@@ -1,82 +1,56 @@
 
 
-### 一个可以替代 `yarn logs -applicationId application_xxx` 的工具
+### 一个Yarn客户端命令行
+
+> 方便在没有hadoop client环境下调用yarn api
 
 #### 前置条件：
 1. 执行环境节点和大数据平台之间网络畅通，执行节点有jdk环境
-2. 提前准备好大数据相关配置文件（core-site.xml、hdfs-site.xml、yarn-site.xml）
+2. 提前准备好大数据相关配置文件（core-site.xml、hdfs-site.xml、yarn-site.xml），确保这些文件放置在统一目录下。
 3. 如果大数据平台开启kerberos，请准备好kerberos相关文件（krb5.conf、keytab文件、principle名称）
 
 #### 执行命令格式如下:
 
-格式1
+- 启动程序
 ```shell
-java -jar -Dloader.path=lib hadoop-yarn-tools-*.jar \
---appid <appid> \
---user <yarn_application_user> \
---yarn_config_dir <yarn_config_dir> \
---log_out_dir <log_out_dir>
+# 无Kerberos认证集群
+java -Dloader.path=lib -cp hadoop-yarn-tools-*.jar com.example.YARNInteractiveClient <bigdata_config_path> false 
+# 示例
+java -Dloader.path=lib -cp hadoop-yarn-tools-*.jar com.example.YARNInteractiveClient /home/devops/project/code/bigdata-examples/yarn-example/cdh5_conf false
+
+# 有Kerberos认证集群
+java -Dloader.path=lib -cp hadoop-yarn-tools-*.jar com.example.YARNInteractiveClient <bigdata_config_path> true <principle_name> <keytab_path> <krb5_conf_path>
+# 示例
+java -Dloader.path=lib -cp hadoop-yarn-tools-*.jar com.example.YARNInteractiveClient /home/devops/project/code/bigdata-examples/yarn-example/cdh6_conf true pipeace@PIPEACE.COM /home/devops/kerberos/pipeace/pipeace-init.keytab /etc/krb5.conf
 ```
 
-格式2（kerberos）
-```shell
-java -jar -Dloader.path=lib hadoop-yarn-tools-*.jar \
---appid <appid> \
---user <yarn_application_user> \
---yarn_config_dir <yarn_config_dir> \
---log_out_dir <log_out_dir> \
---kerberos_enable true \
---k_principle <principle> \
---k_keytab_path <keytab_path> \
---k_krb5_path <krb5_path>
-```
+- 交互命令
+```bash
+# 帮助
+> help
+Available commands:
+  yarn application -list [-appStates <states>] - List applications (optionally filter by states)
+    <states>: Comma-separated list of application states (e.g., RUNNING, FINISHED, FAILED)
+  yarn application -status <application_id> - Get application status
+  yarn application -kill <application_id> - Kill an application
+  yarn node -list - List all nodes
+  yarn queue -status <queue_name> - Get queue status
+  yarn logs -applicationId <application_id> [> <file_path>] - Get application logs (optionally save to file)
+  exit - Exit the program
 
-说明:
-- `<appid>` 填写失败或已经停止的yarn作业的application_ID
-- `<yarn_application_user>` 填写启动yarn作业的用户
-- `<yarn_config_dir>` 填写一个本地目录，确保目录内包含core-site.xml、hdfs-site.xml、yarn-site.xml
-- `<log_out_dir>` 填写一个本地目录(确保目录存在)，作业日志将会输出到该目录内
-- `<principle>` kerberos的principle名称
-- `<keytab_path>` 本地文件，keytab秘钥文件绝对路径
-- `<krb5_path>` 本地文件，krb5.conf秘钥文件绝对路径
 
-样例如下：
 
-参考1
-```shell
-/usr/java/jdk1.8.0_231-amd64/bin/java -jar -Dloader.path=lib hadoop-yarn-tools-*.jar \
---appid application_1725270875614_0197 \
---user hdfs \
---yarn_config_dir /home/dev/hadoop-yarn-tools/yarn_conf \
---log_out_dir /home/dev/hadoop-yarn-tools/out
-```
+# 获取作业列表，可根据状态过滤
+> yarn application -list
+> yarn application -list -appStates FINISHED
+> yarn application -list -appStates RUNNING
 
-参考2
-```shell
-/usr/java/jdk1.8.0_231-amd64/bin/java -jar -Dloader.path=lib hadoop-yarn-tools-*.jar \
---appid application_1722940168678_16065 \
---user cc_test \
---yarn_config_dir /home/dev/hadoop-yarn-tools/cdh5_conf \
---log_out_dir /home/dev/hadoop-yarn-tools/cdh5_out
-```
+# 获取yarn节点列表
+> yarn node -list 
 
-参考3 kerberos安全
-```shell
-/usr/java/jdk1.8.0_231-amd64/bin/java -jar -Dloader.path=lib hadoop-yarn-tools-*.jar \
---appid application_1724810243358_0011 \
---user dev \
---yarn_config_dir /home/dev/hadoop-yarn-tools/cdh6_conf \
---log_out_dir /home/dev/hadoop-yarn-tools/cdh6_out \
---kerberos_enable true \
---k_principle dev@HADOOP.COM \
---k_keytab_path /home/dev/kerberos/dev.keytab \
---k_krb5_path /home/dev/kerberos/krb5.conf
-```
+# 获取作业日志
+> yarn logs -applicationId application_1732873473669_0058 > /home/devops/temp/application_1732873473669_0058
 
-正常运行结果
-```
-result: 0
-application logs agg successful, please see dir <log_out_dir>
 ```
 
 #### 常见问题
@@ -85,7 +59,6 @@ application logs agg successful, please see dir <log_out_dir>
    java.io.IOException:
    Exception in thread "main" java.lang.NullPointerException
        at org.apache.hadoop.yarn.logaggregation.LogCLIHelpers.dumpAllContainersLogs(LogCLIHelpers.java:214)
-       at cn.com.bsfit.YarnLogs.main(YarnLogs.java:65)
    ```
 
 排查点
@@ -108,4 +81,5 @@ application logs agg successful, please see dir <log_out_dir>
     <value>logs</value>
    </property>
    ```
+
 
