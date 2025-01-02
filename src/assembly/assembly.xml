@@ -7,7 +7,7 @@
     <format>zip</format>
   </formats>
 
-  <includeBaseDirectory>false</includeBaseDirectory>
+  <includeBaseDirectory>${project.artifactId}-${project.version}</includeBaseDirectory>
 
   <dependencySets>
     <dependencySet>

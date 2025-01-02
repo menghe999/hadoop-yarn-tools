@@ -13,7 +13,7 @@
     <maven.compiler.target>8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <hadoop.version>3.2.2</hadoop.version>
-    <mvn.plg.vesion>3.2.0</mvn.plg.vesion>
+    <mvn.plugin.vesion>3.3.0</mvn.plugin.vesion>
   </properties>
 
   <dependencies>
@@ -51,93 +51,26 @@
 
   <build>
     <plugins>
-      <!--  lib   -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>${mvn.plg.vesion}</version>
-        <executions>
-          <execution>
-            <id>copy-dependencies</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/lib</outputDirectory>
-              <includeScope>runtime</includeScope>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <!--  main class   -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>${mvn.plg.vesion}</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <addClasspath>true</addClasspath>
-              <classpathPrefix>lib/</classpathPrefix>
-              <mainClass>com.example.YARNInteractiveClient</mainClass>
-            </manifest>
-          </archive>
-          <classesDirectory>${project.build.outputDirectory}</classesDirectory>
-        </configuration>
-      </plugin>
-
-      <!--  other file   -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>${mvn.plg.vesion}</version>
-        <executions>
-          <execution>
-            <id>copy-help</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${project.basedir}</directory>
-                  <includes>
-                    <include>README.md</include>
-                  </includes>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>${mvn.plg.vesion}</version>
+        <version>3.3.0</version> <!-- 使用较新的版本 -->
         <configuration>
           <descriptors>
-            <descriptor>src/assembly/assembly.xml</descriptor>
+            <descriptor>src/assembly/assembly.xml</descriptor> <!-- 确保路径正确 -->
           </descriptors>
-          <finalName>${project.artifactId}-${project.version}</finalName>
-          <appendAssemblyId>false</appendAssemblyId>
+          <appendAssemblyId>false</appendAssemblyId> <!-- 不附加 assembly-id 到文件名 -->
         </configuration>
         <executions>
           <execution>
             <id>make-assembly</id>
-            <phase>package</phase>
+            <phase>package</phase> <!-- 绑定到 package 阶段 -->
             <goals>
               <goal>single</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
-
     </plugins>
   </build>
 </project>
