@@ -4,54 +4,55 @@
 
 > 方便在没有hadoop client环境下调用yarn api
 
-#### 前置条件：
-1. 执行环境节点和大数据平台之间网络畅通，执行节点有jdk环境
-2. 提前准备好大数据相关配置文件（core-site.xml、hdfs-site.xml、yarn-site.xml），确保这些文件放置在统一目录下。
-3. 如果大数据平台开启kerberos，请准备好kerberos相关文件（krb5.conf、keytab文件、principle名称）
+### Spring Boot 日志下载接口
 
-#### 执行命令格式如下:
+> `feature-springboot-deploy` 分支新增 HTTP 下载方式，服务端预先配置 YARN 集群和 Kerberos 凭据，前端只传集群标识、应用 ID 和提交用户。
 
-- 启动程序
-```shell
-# 无Kerberos认证集群
-java -Dloader.path=lib -cp hadoop-yarn-tools-*.jar com.example.YARNInteractiveClient <bigdata_config_path> false 
-# 示例
-java -Dloader.path=lib -cp hadoop-yarn-tools-*.jar com.example.YARNInteractiveClient /home/devops/project/code/bigdata-examples/yarn-example/cdh5_conf false
+#### 服务端配置示例
 
-# 有Kerberos认证集群
-java -Dloader.path=lib -cp hadoop-yarn-tools-*.jar com.example.YARNInteractiveClient <bigdata_config_path> true <principle_name> <keytab_path> <krb5_conf_path>
-# 示例
-java -Dloader.path=lib -cp hadoop-yarn-tools-*.jar com.example.YARNInteractiveClient /home/devops/project/code/bigdata-examples/yarn-example/cdh6_conf true pipeace@PIPEACE.COM /home/devops/kerberos/pipeace/pipeace-init.keytab /etc/krb5.conf
+```yaml
+yarn:
+  logs:
+    clusters:
+      default:
+        yarn-config-dir: /opt/hadoop/conf
+        kerberos-enabled: false
+      secure:
+        yarn-config-dir: /opt/secure-hadoop/conf
+        kerberos-enabled: true
+        principal: yarn-client@EXAMPLE.COM
+        keytab-path: /opt/security/yarn-client.keytab
+        krb5-path: /etc/krb5.conf
 ```
 
-- 交互命令
+不要让前端请求直接传入 `yarn-config-dir`、`keytab-path` 或 `krb5-path`，真实配置文件和凭据只允许保存在服务端受控环境中。
+
+#### 下载请求
+
 ```bash
-# 帮助
-> help
-Available commands:
-  yarn application -list [-appStates <states>] - List applications (optionally filter by states)
-    <states>: Comma-separated list of application states (e.g., RUNNING, FINISHED, FAILED)
-  yarn application -status <application_id> - Get application status
-  yarn application -kill <application_id> - Kill an application
-  yarn node -list - List all nodes
-  yarn queue -status <queue_name> - Get queue status
-  yarn logs -applicationId <application_id> [> <file_path>] - Get application logs (optionally save to file)
-  exit - Exit the program
-
-
-
-# 获取作业列表，可根据状态过滤
-> yarn application -list
-> yarn application -list -appStates FINISHED
-> yarn application -list -appStates RUNNING
-
-# 获取yarn节点列表
-> yarn node -list 
-
-# 获取作业日志
-> yarn logs -applicationId application_1732873473669_0058 > /home/devops/temp/application_1732873473669_0058
-
+curl -X POST 'http://localhost:8080/api/yarn/logs/download' \
+  -H 'Content-Type: application/json' \
+  -o application_1732873473669_0058.zip \
+  -d '{
+    "clusterId": "default",
+    "applicationId": "application_1732873473669_0058",
+    "appOwner": "devops"
+  }'
 ```
+
+接口会在服务端临时目录中拉取聚合日志；如果结果是单文件则直接下载，如果结果包含多个文件或目录则以 ZIP 返回。YARN 聚合日志仍依赖集群侧配置和应用状态，running 状态应用通常不能获取完整聚合日志。
+
+#### Spring Boot 启动方式
+
+```shell
+mvn spring-boot:run
+
+# 或打包后启动可执行 Spring Boot Jar
+mvn clean package
+java -jar target/hadoop-yarn-tools-1.1.0.jar
+```
+
+默认启动配置在 `src/main/resources/application.yml`，部署时可通过环境变量覆盖 `YARN_CONFIG_DIR`、`YARN_SECURE_CONFIG_DIR`、`YARN_KERBEROS_PRINCIPAL`、`YARN_KERBEROS_KEYTAB_PATH`、`YARN_KERBEROS_KRB5_PATH`。
 
 #### 常见问题
 1. 出现如下空指针异常
@@ -81,5 +82,3 @@ Available commands:
     <value>logs</value>
    </property>
    ```
-
-

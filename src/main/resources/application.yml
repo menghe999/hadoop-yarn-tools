@@ -1,0 +1,19 @@
+server:
+  port: 8081
+
+yarn:
+  logs:
+    clusters:
+      default_hdp:
+#        yarn-config-dir: ${YARN_CONFIG_DIR:/opt/hadoop/conf}
+        yarn-config-dir: ${YARN_CONFIG_DIR:/Users/menghe/workspace/env/bigdata/hdp}
+        kerberos-enabled: false
+      default_bsfit_hadoop:
+        yarn-config-dir: ${YARN_CONFIG_DIR:/Users/menghe/workspace/env/bigdata/bsfit_hadoop}
+        kerberos-enabled: false
+      secure:
+        yarn-config-dir: ${YARN_SECURE_CONFIG_DIR:/opt/secure-hadoop/conf}
+        kerberos-enabled: true
+        principal: ${YARN_KERBEROS_PRINCIPAL:}
+        keytab-path: ${YARN_KERBEROS_KEYTAB_PATH:}
+        krb5-path: ${YARN_KERBEROS_KRB5_PATH:/etc/krb5.conf}
