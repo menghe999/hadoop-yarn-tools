@@ -5,14 +5,14 @@ yarn:
   logs:
     max-applications: ${YARN_MAX_APPLICATIONS:1000}
     clusters:
+      # 集群唯一标识 clusterId
       default_hdp:
-#        yarn-config-dir: ${YARN_CONFIG_DIR:/opt/hadoop/conf}
         yarn-config-dir: ${YARN_CONFIG_DIR:/Users/menghe/workspace/env/bigdata/hdp}
         kerberos-enabled: false
       default_bsfit_hadoop:
         yarn-config-dir: ${YARN_CONFIG_DIR:/Users/menghe/workspace/env/bigdata/bsfit_hadoop}
         kerberos-enabled: false
-      secure:
+      default_secure:
         yarn-config-dir: ${YARN_SECURE_CONFIG_DIR:/opt/secure-hadoop/conf}
         kerberos-enabled: true
         principal: ${YARN_KERBEROS_PRINCIPAL:}

@@ -4,7 +4,7 @@ package com.example.api;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import javax.validation.constraints.AssertTrue;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import java.util.HashMap;
@@ -66,15 +66,5 @@ public class YarnLogsDownloadRequest {
     @JsonAnySetter
     public void setUnknownField(String name, Object value) {
         unknownFields.put(name, value);
-    }
-
-    /**
-     * 禁止 HTTP 请求直接传入服务端本地路径或 Kerberos 凭据字段，敏感路径必须由服务端配置白名单维护。
-     *
-     * @return 请求体是否没有携带敏感路径字段
-     */
-    @AssertTrue(message = "请求中不能传入yarnConfigDir、principal、keytabPath或krb5Path")
-    public boolean isSensitivePathArgumentsAbsent() {
-        return unknownFields.isEmpty();
     }
 }

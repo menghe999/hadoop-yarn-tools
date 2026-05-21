@@ -73,15 +73,15 @@ mvn spring-boot:run
 mvn clean package
 unzip target/hadoop-yarn-tools-1.1.0.zip
 cd hadoop-yarn-tools-1.1.0
-bin/run.sh
+./run.sh
 
 # 停止服务
-bin/stop.sh
+./stop.sh
 ```
 
-分发包内的 `hadoop-yarn-tools-1.1.0.jar` 只包含本项目核心代码和资源，运行时依赖位于同级 `libs/` 目录，外置配置位于 `config/application.yml`。`run.sh` 会切换到分发包根目录，并使用 `jar + libs/*` 作为 classpath 启动 `com.example.YarnToolsApplication`，日志默认写入 `logs/hadoop-yarn-tools.log`，进程号默认写入 `run/hadoop-yarn-tools.pid`。
+分发包内的 `hadoop-yarn-tools-1.1.0.jar` 只包含本项目核心代码和资源，运行时依赖位于同级 `libs/` 目录，外置配置位于根目录 `application.yml`。`run.sh` 会切换到分发包根目录，并使用 `jar + libs/*` 作为 classpath 启动 `com.example.YarnToolsApplication`，日志默认写入 `logs/hadoop-yarn-tools.log`，进程号默认写入 `run/hadoop-yarn-tools.pid`。
 
-默认启动配置会随分发包打包到 `config/application.yml`，部署时可直接修改该文件，也可通过环境变量覆盖 `YARN_CONFIG_DIR`、`YARN_SECURE_CONFIG_DIR`、`YARN_KERBEROS_PRINCIPAL`、`YARN_KERBEROS_KEYTAB_PATH`、`YARN_KERBEROS_KRB5_PATH`、`YARN_MAX_APPLICATIONS`。
+默认启动配置会随分发包打包到根目录 `application.yml`，部署时可直接修改该文件，也可通过环境变量覆盖 `YARN_CONFIG_DIR`、`YARN_SECURE_CONFIG_DIR`、`YARN_KERBEROS_PRINCIPAL`、`YARN_KERBEROS_KEYTAB_PATH`、`YARN_KERBEROS_KRB5_PATH`、`YARN_MAX_APPLICATIONS`。
 
 #### 常见问题
 1. 出现如下空指针异常

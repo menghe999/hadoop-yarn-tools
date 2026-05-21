@@ -21,7 +21,17 @@
     </file>
     <file>
       <source>src/main/resources/application.yml</source>
-      <outputDirectory>/config</outputDirectory>
+      <outputDirectory>/</outputDirectory>
+    </file>
+    <file>
+      <source>bin/run.sh</source>
+      <outputDirectory>/</outputDirectory>
+      <fileMode>0755</fileMode>
+    </file>
+    <file>
+      <source>bin/stop.sh</source>
+      <outputDirectory>/</outputDirectory>
+      <fileMode>0755</fileMode>
     </file>
   </files>
 
@@ -32,15 +42,6 @@
         <include>*.jar</include>
       </includes>
       <outputDirectory>/libs</outputDirectory>
-    </fileSet>
-    <fileSet>
-      <directory>bin</directory>
-      <includes>
-        <include>run.sh</include>
-        <include>stop.sh</include>
-      </includes>
-      <outputDirectory>/bin</outputDirectory>
-      <fileMode>0755</fileMode>
     </fileSet>
   </fileSets>
 </assembly>

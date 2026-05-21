@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_HOME="$(cd "$(dirname "$0")/.." && pwd)"
+APP_HOME="$(cd "$(dirname "$0")" && pwd)"
 APP_NAME="${APP_NAME:-hadoop-yarn-tools}"
 PID_DIR="${PID_DIR:-${APP_HOME}/run}"
 PID_FILE="${PID_FILE:-${PID_DIR}/${APP_NAME}.pid}"

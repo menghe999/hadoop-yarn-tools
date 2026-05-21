@@ -11,12 +11,12 @@
 - 仓库没有 Maven Wrapper；使用系统 Maven 命令，不要写成 `./mvnw`。
 - `pom.xml` 将 `maven.compiler.source`/`target` 固定为 `8`；新增代码不要使用 Java 8 之后的语言特性。
 - 常用验证命令：`mvn clean test`，当前有 Spring Boot Test / JUnit 5 / Mockito 测试。
-- 完整打包命令：`mvn clean package`。分发包是 `target/hadoop-yarn-tools-1.1.0.zip`，内部为核心 thin jar、`libs/` 依赖目录、`config/application.yml` 和 `bin/run.sh` / `bin/stop.sh`。
+- 完整打包命令：`mvn clean package`。分发包是 `target/hadoop-yarn-tools-1.1.0.zip`，内部为核心 thin jar、`libs/` 依赖目录、根目录 `application.yml` 和根目录 `run.sh` / `stop.sh`。
 - 当前未配置 JaCoCo、Checkstyle、Spotless、formatter、pre-commit 或 codegen；不要假设这些流程存在。
 
 ## 运行与发布
 
-- 这是常驻 HTTP 服务；开发时可用 `mvn spring-boot:run`，部署时解压 zip 后用 `bin/run.sh` 启动、`bin/stop.sh` 停止。
+- 这是常驻 HTTP 服务；开发时可用 `mvn spring-boot:run`，部署时解压 zip 后在分发包根目录用 `./run.sh` 启动、`./stop.sh` 停止。
 - `src/main/resources/application.yml` 通过 `yarn.logs.clusters.*` 配置服务端集群白名单；前端请求不能传 `yarn-config-dir`、keytab、`krb5.conf` 等本地路径。
 - `default` 集群的配置目录可通过 `YARN_CONFIG_DIR` 覆盖；Kerberos 集群通过 `YARN_KERBEROS_PRINCIPAL`、`YARN_KERBEROS_KEYTAB_PATH`、`YARN_KERBEROS_KRB5_PATH` 覆盖。
 - `GET /api/yarn/applications` 默认受 `yarn.logs.max-applications` 限制，环境变量 `YARN_MAX_APPLICATIONS` 可覆盖。
