@@ -69,12 +69,19 @@ curl 'http://localhost:8080/api/yarn/applications?clusterId=default&queue=root.d
 ```shell
 mvn spring-boot:run
 
-# 或打包后启动可执行 Spring Boot Jar
+# 或打包后解压分发包，以常驻进程方式启动
 mvn clean package
-java -jar target/hadoop-yarn-tools-1.1.0.jar
+unzip target/hadoop-yarn-tools-1.1.0.zip
+cd hadoop-yarn-tools-1.1.0
+bin/run.sh
+
+# 停止服务
+bin/stop.sh
 ```
 
-默认启动配置在 `src/main/resources/application.yml`，部署时可通过环境变量覆盖 `YARN_CONFIG_DIR`、`YARN_SECURE_CONFIG_DIR`、`YARN_KERBEROS_PRINCIPAL`、`YARN_KERBEROS_KEYTAB_PATH`、`YARN_KERBEROS_KRB5_PATH`、`YARN_MAX_APPLICATIONS`。
+分发包内的 `hadoop-yarn-tools-1.1.0.jar` 只包含本项目核心代码和资源，运行时依赖位于同级 `libs/` 目录，外置配置位于 `config/application.yml`。`run.sh` 会切换到分发包根目录，并使用 `jar + libs/*` 作为 classpath 启动 `com.example.YarnToolsApplication`，日志默认写入 `logs/hadoop-yarn-tools.log`，进程号默认写入 `run/hadoop-yarn-tools.pid`。
+
+默认启动配置会随分发包打包到 `config/application.yml`，部署时可直接修改该文件，也可通过环境变量覆盖 `YARN_CONFIG_DIR`、`YARN_SECURE_CONFIG_DIR`、`YARN_KERBEROS_PRINCIPAL`、`YARN_KERBEROS_KEYTAB_PATH`、`YARN_KERBEROS_KRB5_PATH`、`YARN_MAX_APPLICATIONS`。
 
 #### 常见问题
 1. 出现如下空指针异常

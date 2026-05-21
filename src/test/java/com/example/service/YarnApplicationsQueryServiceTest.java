@@ -202,7 +202,6 @@ public class YarnApplicationsQueryServiceTest {
 
         private final boolean fail;
         private Configuration configuration;
-        private Set<String> queues;
         private EnumSet<YarnApplicationState> states;
         private List<RecordedRequest> requests = new ArrayList<RecordedRequest>();
 
@@ -215,7 +214,6 @@ public class YarnApplicationsQueryServiceTest {
                 Configuration configuration, Set<String> queues, EnumSet<YarnApplicationState> states, long limit)
                 throws IOException, YarnException {
             this.configuration = configuration;
-            this.queues = queues;
             this.states = states;
             this.limit = limit;
             this.requests.add(new RecordedRequest(queues, states));

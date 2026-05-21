@@ -17,6 +17,8 @@
     <jaxrs.version>2.1.1</jaxrs.version>
     <hadoop.version>3.2.2</hadoop.version>
     <mvn.plugin.vesion>3.3.0</mvn.plugin.vesion>
+    <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>
+    <maven.dependency.plugin.version>3.6.1</maven.dependency.plugin.version>
     <start-class>com.example.YarnToolsApplication</start-class>
   </properties>
 
@@ -102,11 +104,36 @@
         <configuration>
           <mainClass>${start-class}</mainClass>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven.jar.plugin.version}</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>libs/</classpathPrefix>
+              <mainClass>${start-class}</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>${maven.dependency.plugin.version}</version>
         <executions>
           <execution>
+            <id>copy-runtime-dependencies</id>
+            <phase>package</phase>
             <goals>
-              <goal>repackage</goal>
+              <goal>copy-dependencies</goal>
             </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/libs</outputDirectory>
+              <includeScope>runtime</includeScope>
+            </configuration>
           </execution>
         </executions>
       </plugin>

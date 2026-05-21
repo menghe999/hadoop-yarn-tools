@@ -7,24 +7,40 @@
     <format>zip</format>
   </formats>
 
-  <includeBaseDirectory>${project.artifactId}-${project.version}</includeBaseDirectory>
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <baseDirectory>${project.artifactId}-${project.version}</baseDirectory>
 
-  <dependencySets>
-    <dependencySet>
-      <outputDirectory>/lib</outputDirectory>
-      <useTransitiveDependencies>true</useTransitiveDependencies>
-      <unpack>false</unpack>
-    </dependencySet>
-  </dependencySets>
+  <files>
+    <file>
+      <source>${project.build.directory}/${project.build.finalName}.jar</source>
+      <outputDirectory>/</outputDirectory>
+    </file>
+    <file>
+      <source>README.md</source>
+      <outputDirectory>/</outputDirectory>
+    </file>
+    <file>
+      <source>src/main/resources/application.yml</source>
+      <outputDirectory>/config</outputDirectory>
+    </file>
+  </files>
 
   <fileSets>
     <fileSet>
-      <directory>${project.build.directory}</directory>
+      <directory>${project.build.directory}/libs</directory>
       <includes>
-        <include>${project.artifactId}-${project.version}.jar</include>
-        <include>README.md</include>
+        <include>*.jar</include>
       </includes>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory>/libs</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>bin</directory>
+      <includes>
+        <include>run.sh</include>
+        <include>stop.sh</include>
+      </includes>
+      <outputDirectory>/bin</outputDirectory>
+      <fileMode>0755</fileMode>
     </fileSet>
   </fileSets>
 </assembly>

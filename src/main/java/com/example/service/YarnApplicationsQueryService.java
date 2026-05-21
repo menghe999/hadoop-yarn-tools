@@ -16,7 +16,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * YARN 应用列表查询服务，按服务端集群配置、队列和可选状态读取 ResourceManager 应用报告。
