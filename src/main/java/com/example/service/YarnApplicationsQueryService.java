@@ -12,8 +12,10 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -50,13 +52,12 @@ public class YarnApplicationsQueryService {
         try {
             YarnClusterProperties.Cluster cluster = yarnClusterProperties.requireCluster(request.getClusterId());
             final Configuration configuration = yarnClusterConnectionService.loadHadoopConfiguration(cluster);
-            final Set<String> queues = Collections.singleton(request.getQueue());
             final EnumSet<YarnApplicationState> states = parseState(request.getState());
             final long limit = yarnClusterProperties.getMaxApplications();
             List<ApplicationReport> reports = yarnClusterConnectionService.execute(
                     cluster,
                     configuration,
-                    () -> yarnApplicationsClient.getApplications(configuration, queues, states, limit));
+                    () -> queryApplications(configuration, request.getQueue(), states, limit));
             return buildResponse(request, reports);
         } catch (YarnLogsInvalidRequestException e) {
             throw e;
@@ -67,9 +68,66 @@ public class YarnApplicationsQueryService {
         }
     }
 
+    private List<ApplicationReport> queryApplications(
+            Configuration configuration, String queue, EnumSet<YarnApplicationState> states, long limit) throws Exception {
+        Map<String, ApplicationReport> applications = new LinkedHashMap<String, ApplicationReport>();
+        EnumSet<YarnApplicationState> activeStates = copyIntersection(states, activeStates());
+        if (!activeStates.isEmpty()) {
+            addApplications(applications, yarnApplicationsClient.getApplications(
+                    configuration, Collections.singleton(queue), activeStates, limit));
+        }
+        EnumSet<YarnApplicationState> completedStates = copyIntersection(states, completedStates());
+        if (!completedStates.isEmpty() && applications.size() < limit) {
+            List<ApplicationReport> completedApplications = yarnApplicationsClient.getApplications(
+                    configuration, null, completedStates, limit);
+            for (ApplicationReport report : completedApplications) {
+                if (isSameQueue(queue, report.getQueue())) {
+                    applications.put(report.getApplicationId().toString(), report);
+                    if (applications.size() >= limit) {
+                        break;
+                    }
+                }
+            }
+        }
+        return new ArrayList<ApplicationReport>(applications.values());
+    }
+
+    private EnumSet<YarnApplicationState> activeStates() {
+        return EnumSet.of(
+                YarnApplicationState.NEW,
+                YarnApplicationState.NEW_SAVING,
+                YarnApplicationState.SUBMITTED,
+                YarnApplicationState.ACCEPTED,
+                YarnApplicationState.RUNNING);
+    }
+
+    private EnumSet<YarnApplicationState> completedStates() {
+        return EnumSet.of(YarnApplicationState.FINISHED, YarnApplicationState.FAILED, YarnApplicationState.KILLED);
+    }
+
+    private EnumSet<YarnApplicationState> copyIntersection(
+            EnumSet<YarnApplicationState> source, EnumSet<YarnApplicationState> candidates) {
+        EnumSet<YarnApplicationState> copy = EnumSet.copyOf(source);
+        copy.retainAll(candidates);
+        return copy;
+    }
+
+    private void addApplications(Map<String, ApplicationReport> applications, List<ApplicationReport> reports) {
+        for (ApplicationReport report : reports) {
+            applications.put(report.getApplicationId().toString(), report);
+        }
+    }
+
+    private boolean isSameQueue(String requestedQueue, String reportQueue) {
+        if (requestedQueue.equals(reportQueue)) {
+            return true;
+        }
+        return reportQueue != null && reportQueue.endsWith("." + requestedQueue);
+    }
+
     private EnumSet<YarnApplicationState> parseState(String state) {
         if (state == null || state.trim().length() == 0) {
-            return null;
+            return EnumSet.allOf(YarnApplicationState.class);
         }
         YarnApplicationState yarnApplicationState = YarnApplicationState.valueOf(
                 state.trim().toUpperCase(Locale.ENGLISH));

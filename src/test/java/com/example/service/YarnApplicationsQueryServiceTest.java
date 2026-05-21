@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,7 +46,7 @@ public class YarnApplicationsQueryServiceTest {
         YarnApplicationsResponse response = service.query(request("RUNNING"));
 
         assertNotNull(applicationsClient.configuration);
-        assertEquals(Collections.singleton("root.default"), applicationsClient.queues);
+        assertEquals(Collections.singleton("root.default"), applicationsClient.requests.get(0).queues);
         assertEquals(EnumSet.of(YarnApplicationState.RUNNING), applicationsClient.states);
         assertEquals(1000L, applicationsClient.limit);
         assertEquals("default", response.getClusterId());
@@ -57,18 +58,45 @@ public class YarnApplicationsQueryServiceTest {
     }
 
     /**
-     * 验证 state 为空时不会向 YarnClient 传递状态过滤集合。
+     * 验证 state 为空时会显式传递所有状态，避免 ResourceManager 默认只返回 active 应用。
      */
     @Test
-    public void shouldQueryApplicationsWithoutStateFilter() {
+    public void shouldQueryApplicationsWithAllStatesWhenStateFilterIsBlank() {
         RecordingApplicationsClient applicationsClient = new RecordingApplicationsClient(false);
         YarnApplicationsQueryService service = service(applicationsClient);
 
         YarnApplicationsResponse response = service.query(request(null));
 
-        assertNull(applicationsClient.states);
+        assertEquals(2, applicationsClient.requests.size());
+        assertEquals(Collections.singleton("root.default"), applicationsClient.requests.get(0).queues);
+        assertEquals(
+                EnumSet.of(YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING, YarnApplicationState.SUBMITTED,
+                        YarnApplicationState.ACCEPTED, YarnApplicationState.RUNNING),
+                applicationsClient.requests.get(0).states);
+        assertNull(applicationsClient.requests.get(1).queues);
+        assertEquals(
+                EnumSet.of(YarnApplicationState.FINISHED, YarnApplicationState.FAILED, YarnApplicationState.KILLED),
+                applicationsClient.requests.get(1).states);
         assertNull(response.getState());
+        assertEquals(2, response.getApplications().size());
+    }
+
+    /**
+     * 验证查询 FINISHED 时不下推队列过滤，改为服务端按队列过滤，兼容部分 RM 对终态队列过滤返回空的问题。
+     */
+    @Test
+    public void shouldFilterFinishedApplicationsByQueueLocally() {
+        RecordingApplicationsClient applicationsClient = new RecordingApplicationsClient(false);
+        YarnApplicationsQueryService service = service(applicationsClient);
+
+        YarnApplicationsResponse response = service.query(request("FINISHED"));
+
+        assertEquals(1, applicationsClient.requests.size());
+        assertNull(applicationsClient.requests.get(0).queues);
+        assertEquals(EnumSet.of(YarnApplicationState.FINISHED), applicationsClient.requests.get(0).states);
         assertEquals(1, response.getApplications().size());
+        assertEquals("application_1776741130114_0007", response.getApplications().get(0).getApplicationId());
+        assertEquals("FINISHED", response.getApplications().get(0).getState());
     }
 
     /**
@@ -136,6 +164,30 @@ public class YarnApplicationsQueryServiceTest {
                 null);
     }
 
+    private static ApplicationReport completedReport(String queue) {
+        return ApplicationReport.newInstance(
+                ApplicationId.newInstance(1776741130114L, 7),
+                null,
+                "root",
+                queue,
+                "finished-job",
+                "rm-host",
+                8088,
+                null,
+                YarnApplicationState.FINISHED,
+                "",
+                "http://rm/cluster/app/application_1776741130114_0007",
+                1776741130114L,
+                1776741130999L,
+                1776741140999L,
+                FinalApplicationStatus.SUCCEEDED,
+                null,
+                "MAPREDUCE",
+                1.0f,
+                "http://rm/cluster/app/application_1776741130114_0007",
+                null);
+    }
+
     /**
      * 测试专用 YARN 应用客户端，记录查询条件并返回模拟应用报告。
      *
@@ -152,6 +204,7 @@ public class YarnApplicationsQueryServiceTest {
         private Configuration configuration;
         private Set<String> queues;
         private EnumSet<YarnApplicationState> states;
+        private List<RecordedRequest> requests = new ArrayList<RecordedRequest>();
 
         private RecordingApplicationsClient(boolean fail) {
             this.fail = fail;
@@ -165,12 +218,30 @@ public class YarnApplicationsQueryServiceTest {
             this.queues = queues;
             this.states = states;
             this.limit = limit;
+            this.requests.add(new RecordedRequest(queues, states));
             if (fail) {
                 throw new YarnException("ResourceManager unavailable");
+            }
+            if (states.contains(YarnApplicationState.FINISHED)) {
+                List<ApplicationReport> reports = new ArrayList<ApplicationReport>();
+                reports.add(completedReport("root.default"));
+                reports.add(completedReport("root.bigdata"));
+                return reports;
             }
             return Collections.singletonList(report());
         }
 
         private long limit;
+    }
+
+    private static class RecordedRequest {
+
+        private final Set<String> queues;
+        private final EnumSet<YarnApplicationState> states;
+
+        private RecordedRequest(Set<String> queues, EnumSet<YarnApplicationState> states) {
+            this.queues = queues;
+            this.states = states;
+        }
     }
 }

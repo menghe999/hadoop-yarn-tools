@@ -36,7 +36,9 @@ public class DefaultYarnApplicationsClient implements YarnApplicationsClient {
             yarnClient.init(configuration);
             yarnClient.start();
             GetApplicationsRequest request = GetApplicationsRequest.newInstance();
-            request.setQueues(queues);
+            if (queues != null) {
+                request.setQueues(queues);
+            }
             request.setApplicationStates(states);
             request.setLimit(limit);
             return yarnClient.getApplications(request);

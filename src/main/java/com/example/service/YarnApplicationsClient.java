@@ -27,8 +27,8 @@ public interface YarnApplicationsClient {
      * 按队列和可选状态查询 YARN 应用列表。
      *
      * @param configuration Hadoop 客户端配置
-     * @param queues 队列名称集合
-     * @param states 应用状态集合，未过滤时为 null
+     * @param queues 队列名称集合；为 null 时不向 ResourceManager 下推队列过滤
+     * @param states 应用状态集合，未指定状态时显式包含所有 YARN 状态
      * @return 应用报告列表
      * @throws IOException IO 异常
      * @throws YarnException YARN 客户端异常
