@@ -3,6 +3,7 @@ server:
 
 yarn:
   logs:
+    max-applications: ${YARN_MAX_APPLICATIONS:1000}
     clusters:
       default_hdp:
 #        yarn-config-dir: ${YARN_CONFIG_DIR:/opt/hadoop/conf}

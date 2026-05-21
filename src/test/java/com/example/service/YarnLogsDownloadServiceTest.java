@@ -34,7 +34,8 @@ public class YarnLogsDownloadServiceTest {
     @Test
     public void shouldBuildContainerLogsRequestAndReturnSingleFile() {
         RecordingDumper recordingDumper = new RecordingDumper(0, true);
-        YarnLogsDownloadService service = new YarnLogsDownloadService(recordingDumper, clusterProperties());
+        YarnLogsDownloadService service = new YarnLogsDownloadService(
+                recordingDumper, clusterProperties(), new YarnClusterConnectionService());
 
         DownloadedYarnLogs downloadedYarnLogs = service.download(validRequest());
 
@@ -57,14 +58,10 @@ public class YarnLogsDownloadServiceTest {
     @Test
     public void shouldCleanTemporaryDirectoryWhenDumperReturnsFailure() {
         RecordingDumper recordingDumper = new RecordingDumper(1, true);
-        YarnLogsDownloadService service = new YarnLogsDownloadService(recordingDumper, clusterProperties());
+        YarnLogsDownloadService service = new YarnLogsDownloadService(
+                recordingDumper, clusterProperties(), new YarnClusterConnectionService());
 
-        assertThrows(YarnLogsDownloadException.class, new org.junit.jupiter.api.function.Executable() {
-            @Override
-            public void execute() {
-                service.download(validRequest());
-            }
-        });
+        assertThrows(YarnLogsDownloadException.class, () -> service.download(validRequest()));
 
         assertNotNull(recordingDumper.outputLocalDir);
         assertFalse(Files.exists(recordingDumper.outputLocalDir));
@@ -76,14 +73,10 @@ public class YarnLogsDownloadServiceTest {
     @Test
     public void shouldRejectEmptyDownloadedLogs() {
         RecordingDumper recordingDumper = new RecordingDumper(0, false);
-        YarnLogsDownloadService service = new YarnLogsDownloadService(recordingDumper, clusterProperties());
+        YarnLogsDownloadService service = new YarnLogsDownloadService(
+                recordingDumper, clusterProperties(), new YarnClusterConnectionService());
 
-        assertThrows(YarnLogsDownloadException.class, new org.junit.jupiter.api.function.Executable() {
-            @Override
-            public void execute() {
-                service.download(validRequest());
-            }
-        });
+        assertThrows(YarnLogsDownloadException.class, () -> service.download(validRequest()));
         assertFalse(Files.exists(recordingDumper.outputLocalDir));
     }
 

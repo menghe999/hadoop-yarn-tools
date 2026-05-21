@@ -2,6 +2,7 @@
 package com.example.api;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotBlank;
@@ -23,14 +24,17 @@ public class YarnLogsDownloadRequest {
 
     @NotBlank(message = "applicationId不能为空")
     @Pattern(regexp = "application_\\d+_\\d+", message = "applicationId格式不正确")
+    @Schema(description = "YARN应用ID", example = "application_1732873473669_0058")
     private String applicationId;
 
     @NotBlank(message = "appOwner不能为空")
     @Pattern(regexp = "[A-Za-z0-9._-]{1,128}", message = "appOwner格式不正确")
+    @Schema(description = "应用提交用户", example = "devops")
     private String appOwner;
 
     @NotBlank(message = "clusterId不能为空")
     @Pattern(regexp = "[A-Za-z0-9._-]{1,64}", message = "clusterId格式不正确")
+    @Schema(description = "服务端白名单集群标识", example = "default")
     private String clusterId;
 
     private final Map<String, Object> unknownFields = new HashMap<String, Object>();

@@ -42,6 +42,28 @@ curl -X POST 'http://localhost:8080/api/yarn/logs/download' \
 
 接口会在服务端临时目录中拉取聚合日志；如果结果是单文件则直接下载，如果结果包含多个文件或目录则以 ZIP 返回。YARN 聚合日志仍依赖集群侧配置和应用状态，running 状态应用通常不能获取完整聚合日志。
 
+#### 队列应用查询请求
+
+```bash
+# 查询 root.default 队列下所有状态的应用
+curl 'http://localhost:8080/api/yarn/applications?clusterId=default&queue=root.default'
+
+# 查询 root.default 队列下 RUNNING 状态的应用
+curl 'http://localhost:8080/api/yarn/applications?clusterId=default&queue=root.default&state=RUNNING'
+```
+
+`state` 为可选参数，支持 Hadoop YARN 状态：`NEW`、`NEW_SAVING`、`SUBMITTED`、`ACCEPTED`、`RUNNING`、`FINISHED`、`FAILED`、`KILLED`。响应会返回本次查询条件和应用摘要列表，摘要字段包含 `applicationId`、`name`、`user`、`queue`、`state`、`finalStatus`、`applicationType`、`progress`、`trackingUrl`、`startedTime`、`finishedTime`。
+
+应用列表接口会按服务端配置的 `yarn.logs.max-applications` 限制单次返回数量，默认 `1000`，部署时可通过环境变量 `YARN_MAX_APPLICATIONS` 覆盖，避免一次性查询和返回过大的 ResourceManager 数据集。
+
+#### Swagger 调试入口
+
+服务启动后可通过 Swagger UI 调用接口：
+
+- `http://localhost:8080/swagger-ui.html`
+- `http://localhost:8080/swagger-ui/index.html`
+- `http://localhost:8080/v3/api-docs/yarn`
+
 #### Spring Boot 启动方式
 
 ```shell
@@ -52,7 +74,7 @@ mvn clean package
 java -jar target/hadoop-yarn-tools-1.1.0.jar
 ```
 
-默认启动配置在 `src/main/resources/application.yml`，部署时可通过环境变量覆盖 `YARN_CONFIG_DIR`、`YARN_SECURE_CONFIG_DIR`、`YARN_KERBEROS_PRINCIPAL`、`YARN_KERBEROS_KEYTAB_PATH`、`YARN_KERBEROS_KRB5_PATH`。
+默认启动配置在 `src/main/resources/application.yml`，部署时可通过环境变量覆盖 `YARN_CONFIG_DIR`、`YARN_SECURE_CONFIG_DIR`、`YARN_KERBEROS_PRINCIPAL`、`YARN_KERBEROS_KEYTAB_PATH`、`YARN_KERBEROS_KRB5_PATH`、`YARN_MAX_APPLICATIONS`。
 
 #### 常见问题
 1. 出现如下空指针异常

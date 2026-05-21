@@ -6,6 +6,8 @@ import com.example.service.TemporaryDirectoryCleaner;
 import com.example.service.YarnLogsDownloadException;
 import com.example.service.YarnLogsDownloadService;
 import com.example.service.YarnLogsInvalidRequestException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -36,6 +38,7 @@ import java.nio.file.Files;
  */
 @RestController
 @RequestMapping("/api/yarn/logs")
+@Tag(name = "YARN日志", description = "YARN 聚合日志下载接口")
 public class YarnLogsDownloadController {
 
     private static final int BUFFER_SIZE = 8192;
@@ -53,6 +56,7 @@ public class YarnLogsDownloadController {
      * @return 流式下载响应
      */
     @PostMapping("/download")
+    @Operation(summary = "下载YARN聚合日志", description = "按集群标识、应用ID和提交用户拉取聚合日志；单文件直接下载，多文件返回ZIP。")
     public ResponseEntity<StreamingResponseBody> download(@Valid @RequestBody YarnLogsDownloadRequest request) {
         final DownloadedYarnLogs downloadedYarnLogs;
         try {
@@ -63,18 +67,15 @@ public class YarnLogsDownloadController {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "YARN日志下载失败", e);
         }
 
-        StreamingResponseBody responseBody = new StreamingResponseBody() {
-            @Override
-            public void writeTo(OutputStream outputStream) throws IOException {
-                try {
-                    if (downloadedYarnLogs.isZipRequired()) {
-                        ZipStreamingWriter.writeDirectory(downloadedYarnLogs.getContentPath(), outputStream);
-                    } else {
-                        writeFile(downloadedYarnLogs, outputStream);
-                    }
-                } finally {
-                    TemporaryDirectoryCleaner.deleteQuietly(downloadedYarnLogs.getTemporaryDirectory());
+        StreamingResponseBody responseBody = outputStream -> {
+            try {
+                if (downloadedYarnLogs.isZipRequired()) {
+                    ZipStreamingWriter.writeDirectory(downloadedYarnLogs.getContentPath(), outputStream);
+                } else {
+                    writeFile(downloadedYarnLogs, outputStream);
                 }
+            } finally {
+                TemporaryDirectoryCleaner.deleteQuietly(downloadedYarnLogs.getTemporaryDirectory());
             }
         };
 

@@ -19,7 +19,17 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "yarn.logs")
 public class YarnClusterProperties {
 
+    private long maxApplications = 1000L;
+
     private Map<String, Cluster> clusters = new HashMap<String, Cluster>();
+
+    public long getMaxApplications() {
+        return maxApplications;
+    }
+
+    public void setMaxApplications(long maxApplications) {
+        this.maxApplications = maxApplications;
+    }
 
     public Map<String, Cluster> getClusters() {
         return clusters;
@@ -36,6 +46,9 @@ public class YarnClusterProperties {
      * @return 集群配置
      */
     public Cluster requireCluster(String clusterId) {
+        if (maxApplications <= 0L) {
+            throw new YarnLogsDownloadException("YARN应用查询上限必须大于0");
+        }
         Cluster cluster = clusters.get(clusterId);
         if (cluster == null) {
             throw new YarnLogsInvalidRequestException("未知YARN集群标识: " + clusterId);
