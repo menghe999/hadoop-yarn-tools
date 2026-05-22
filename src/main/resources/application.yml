@@ -1,6 +1,11 @@
 server:
   port: 8081
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    url: /v3/api-docs
 yarn:
   logs:
     max-applications: ${YARN_MAX_APPLICATIONS:1000}
