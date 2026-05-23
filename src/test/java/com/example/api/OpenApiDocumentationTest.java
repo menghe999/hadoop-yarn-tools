@@ -2,7 +2,9 @@
 package com.example.api;
 
 import com.example.service.YarnApplicationsQueryService;
+import com.example.service.YarnClusterQueryService;
 import com.example.service.YarnLogsDownloadService;
+import com.example.service.YarnRuntimeQueryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -17,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * OpenAPI 文档测试，验证 Swagger 能发现 YARN 日志下载和应用查询接口。
+ * OpenAPI 文档测试，验证 Swagger 能发现 YARN 日志下载、应用查询和集群摘要接口。
  *
  * <p>
  * created on: 2026-05-20
@@ -40,8 +42,14 @@ public class OpenApiDocumentationTest {
     @MockBean
     private YarnApplicationsQueryService yarnApplicationsQueryService;
 
+    @MockBean
+    private YarnClusterQueryService yarnClusterQueryService;
+
+    @MockBean
+    private YarnRuntimeQueryService yarnRuntimeQueryService;
+
     /**
-     * 验证 yarn 分组 OpenAPI JSON 包含两个对外接口路径，Swagger UI 依赖该文档渲染调试表单。
+     * 验证 yarn 分组 OpenAPI JSON 包含日志、应用、队列、节点和集群接口路径。
      *
      * @throws Exception MockMvc 异常
      */
@@ -50,6 +58,12 @@ public class OpenApiDocumentationTest {
         mockMvc.perform(get("/v3/api-docs/yarn"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("/api/yarn/logs/download")))
-                .andExpect(content().string(containsString("/api/yarn/applications")));
+                .andExpect(content().string(containsString("/api/yarn/applications")))
+                .andExpect(content().string(containsString("/api/yarn/applications/{applicationId}")))
+                .andExpect(content().string(containsString("/api/yarn/applications/{applicationId}/kill")))
+                .andExpect(content().string(containsString("/api/yarn/queues")))
+                .andExpect(content().string(containsString("/api/yarn/nodes")))
+                .andExpect(content().string(containsString("/api/yarn/nodes/{nodeId}")))
+                .andExpect(content().string(containsString("/api/yarn/clusters")));
     }
 }

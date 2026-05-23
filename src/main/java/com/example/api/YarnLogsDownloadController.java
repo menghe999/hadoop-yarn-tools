@@ -56,7 +56,7 @@ public class YarnLogsDownloadController {
      * @return 流式下载响应
      */
     @PostMapping("/download")
-    @Operation(summary = "下载YARN聚合日志", description = "按集群标识、应用ID和提交用户拉取聚合日志；单文件直接下载，多文件返回ZIP。")
+    @Operation(summary = "下载YARN聚合日志", description = "按集群标识和应用ID拉取聚合日志；服务端查询YARN应用报告获取提交用户，单文件直接下载，多文件返回ZIP。")
     public ResponseEntity<StreamingResponseBody> download(@Valid @RequestBody YarnLogsDownloadRequest request) {
         final DownloadedYarnLogs downloadedYarnLogs;
         try {

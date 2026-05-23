@@ -4,6 +4,8 @@ package com.example.service;
 import com.example.api.YarnLogsDownloadRequest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.logaggregation.ContainerLogsRequest;
 import org.springframework.stereotype.Service;
 
@@ -28,12 +30,14 @@ public class YarnLogsDownloadService {
     private final YarnLogsDumper yarnLogsDumper;
     private final YarnClusterProperties yarnClusterProperties;
     private final YarnClusterConnectionService yarnClusterConnectionService;
+    private final YarnApplicationsClient yarnApplicationsClient;
 
     public YarnLogsDownloadService(YarnLogsDumper yarnLogsDumper, YarnClusterProperties yarnClusterProperties,
-            YarnClusterConnectionService yarnClusterConnectionService) {
+            YarnClusterConnectionService yarnClusterConnectionService, YarnApplicationsClient yarnApplicationsClient) {
         this.yarnLogsDumper = yarnLogsDumper;
         this.yarnClusterProperties = yarnClusterProperties;
         this.yarnClusterConnectionService = yarnClusterConnectionService;
+        this.yarnApplicationsClient = yarnApplicationsClient;
     }
 
     /**
@@ -45,12 +49,18 @@ public class YarnLogsDownloadService {
     public DownloadedYarnLogs download(YarnLogsDownloadRequest request) {
         java.nio.file.Path temporaryDirectory = null;
         try {
+            final ApplicationId appId = ApplicationId.fromString(request.getApplicationId());
             temporaryDirectory = Files.createTempDirectory("yarn-logs-");
             YarnClusterProperties.Cluster cluster = yarnClusterProperties.requireCluster(request.getClusterId());
             final Configuration configuration = yarnClusterConnectionService.loadHadoopConfiguration(cluster);
-            final ContainerLogsRequest containerLogsRequest = buildContainerLogsRequest(request, temporaryDirectory);
+            final java.nio.file.Path outputDirectory = temporaryDirectory;
             int result = yarnClusterConnectionService.execute(cluster, configuration,
-                    () -> yarnLogsDumper.dump(configuration, containerLogsRequest));
+                    () -> {
+                        String appOwner = resolveAppOwner(configuration, appId);
+                        ContainerLogsRequest containerLogsRequest = buildContainerLogsRequest(appId, appOwner,
+                                outputDirectory);
+                        return yarnLogsDumper.dump(configuration, containerLogsRequest);
+                    });
             if (result != 0) {
                 throw new YarnLogsDownloadException("YARN日志拉取失败，返回码: " + result);
             }
@@ -76,12 +86,26 @@ public class YarnLogsDownloadService {
         }
     }
 
+    private String resolveAppOwner(Configuration configuration, ApplicationId appId) {
+        try {
+            ApplicationReport applicationReport = yarnApplicationsClient.getApplicationReport(configuration, appId);
+            String appOwner = applicationReport == null ? null : applicationReport.getUser();
+            if (appOwner == null || appOwner.trim().isEmpty()) {
+                throw new YarnLogsInvalidRequestException("YARN应用报告缺少提交用户");
+            }
+            return appOwner;
+        } catch (IOException e) {
+            throw new YarnLogsDownloadException("查询YARN应用报告IO异常", e);
+        } catch (YarnException e) {
+            throw new YarnLogsDownloadException("查询YARN应用报告失败: " + e.getMessage(), e);
+        }
+    }
+
     private ContainerLogsRequest buildContainerLogsRequest(
-            YarnLogsDownloadRequest request, java.nio.file.Path temporaryDirectory) {
-        ApplicationId appId = ApplicationId.fromString(request.getApplicationId());
+            ApplicationId appId, String appOwner, java.nio.file.Path temporaryDirectory) {
         ContainerLogsRequest containerLogsRequest = new ContainerLogsRequest();
         containerLogsRequest.setAppId(appId);
-        containerLogsRequest.setAppOwner(request.getAppOwner());
+        containerLogsRequest.setAppOwner(appOwner);
         containerLogsRequest.setBytes(Long.MAX_VALUE);
         containerLogsRequest.setOutputLocalDir(temporaryDirectory.toString());
         return containerLogsRequest;

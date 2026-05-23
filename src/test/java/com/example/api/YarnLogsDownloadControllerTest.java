@@ -102,9 +102,42 @@ public class YarnLogsDownloadControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{"
                                 + "\"applicationId\":\"application_1732873473669_0058\","
-                                + "\"appOwner\":\"devops\","
                                 + "\"clusterId\":\"default\","
                                 + "\"yarnConfigDir\":\"/tmp/yarn-conf\""
+                                + "}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * 验证旧版 appOwner 入参会作为未知字段返回 400，防止前端继续控制日志 appOwner。
+     *
+     * @throws Exception MockMvc 异常
+     */
+    @Test
+    public void shouldRejectAppOwnerArgumentFromRequest() throws Exception {
+        mockMvc.perform(post("/api/yarn/logs/download")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{"
+                                + "\"applicationId\":\"application_1732873473669_0058\","
+                                + "\"clusterId\":\"default\","
+                                + "\"appOwner\":\"devops\""
+                                + "}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * 验证 user 入参会作为未知字段返回 400，防止前端用别名绕过 owner 解析。
+     *
+     * @throws Exception MockMvc 异常
+     */
+    @Test
+    public void shouldRejectUserArgumentFromRequest() throws Exception {
+        mockMvc.perform(post("/api/yarn/logs/download")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{"
+                                + "\"applicationId\":\"application_1732873473669_0058\","
+                                + "\"clusterId\":\"default\","
+                                + "\"user\":\"devops\""
                                 + "}"))
                 .andExpect(status().isBadRequest());
     }
@@ -148,7 +181,6 @@ public class YarnLogsDownloadControllerTest {
     private String validRequestJson() {
         return "{"
                 + "\"applicationId\":\"application_1732873473669_0058\","
-                + "\"appOwner\":\"devops\","
                 + "\"clusterId\":\"default\""
                 + "}";
     }

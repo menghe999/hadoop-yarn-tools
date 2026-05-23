@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-
 import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
@@ -13,36 +12,24 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * YARN 聚合日志下载请求体，只承载应用标识和服务端白名单集群标识；未知敏感字段会被拒绝。
+ * YARN 应用终止请求体，只允许前端传入服务端白名单集群标识。
  *
  * <p>
- * created on: 2026-05-20
+ * created on: 2026-05-22
  * </p>
  *
  * @author mengh
  * @since 1.1.0
  */
-public class YarnLogsDownloadRequest {
-
-    @NotBlank(message = "applicationId不能为空")
-    @Pattern(regexp = "application_\\d+_\\d+", message = "applicationId格式不正确")
-    @Schema(description = "YARN应用ID", example = "application_1732873473669_0058")
-    private String applicationId;
+public class YarnApplicationKillRequest {
 
     @NotBlank(message = "clusterId不能为空")
     @Pattern(regexp = "[A-Za-z0-9._-]{1,64}", message = "clusterId格式不正确")
     @Schema(description = "服务端白名单集群标识", example = "default")
     private String clusterId;
 
+    @JsonIgnore
     private final Map<String, Object> unknownFields = new HashMap<String, Object>();
-
-    public String getApplicationId() {
-        return applicationId;
-    }
-
-    public void setApplicationId(String applicationId) {
-        this.applicationId = applicationId;
-    }
 
     public String getClusterId() {
         return clusterId;
@@ -57,7 +44,7 @@ public class YarnLogsDownloadRequest {
         unknownFields.put(name, value);
     }
 
-    @AssertTrue(message = "日志下载请求不能包含未知字段或服务端敏感路径")
+    @AssertTrue(message = "kill请求不能包含未知字段或服务端敏感路径")
     @JsonIgnore
     public boolean isUnknownFieldsEmpty() {
         return unknownFields.isEmpty();

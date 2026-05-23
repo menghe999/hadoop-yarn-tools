@@ -21,6 +21,8 @@ public class YarnClusterProperties {
 
     private long maxApplications = 1000L;
 
+    private boolean applicationKillEnabled;
+
     private Map<String, Cluster> clusters = new HashMap<String, Cluster>();
 
     public long getMaxApplications() {
@@ -29,6 +31,14 @@ public class YarnClusterProperties {
 
     public void setMaxApplications(long maxApplications) {
         this.maxApplications = maxApplications;
+    }
+
+    public boolean isApplicationKillEnabled() {
+        return applicationKillEnabled;
+    }
+
+    public void setApplicationKillEnabled(boolean applicationKillEnabled) {
+        this.applicationKillEnabled = applicationKillEnabled;
     }
 
     public Map<String, Cluster> getClusters() {

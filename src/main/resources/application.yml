@@ -9,6 +9,7 @@ springdoc:
 yarn:
   logs:
     max-applications: ${YARN_MAX_APPLICATIONS:1000}
+    application-kill-enabled: ${YARN_APPLICATION_KILL_ENABLED:false}
     clusters:
       # 集群唯一标识 clusterId
       default_hdp:

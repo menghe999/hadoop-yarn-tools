@@ -2,7 +2,11 @@
 package com.example.service;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.api.records.NodeReport;
+import org.apache.hadoop.yarn.api.records.NodeState;
+import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
@@ -36,4 +40,49 @@ public interface YarnApplicationsClient {
     List<ApplicationReport> getApplications(
             Configuration configuration, Set<String> queues, EnumSet<YarnApplicationState> states, long limit)
             throws IOException, YarnException;
+
+    /**
+     * 按应用 ID 查询单个 YARN 应用报告。
+     *
+     * @param configuration Hadoop 客户端配置
+     * @param applicationId YARN 应用 ID
+     * @return 应用报告
+     * @throws IOException IO 异常
+     * @throws YarnException YARN 客户端异常
+     */
+    ApplicationReport getApplicationReport(Configuration configuration, ApplicationId applicationId)
+            throws IOException, YarnException;
+
+    /**
+     * 请求 ResourceManager 终止指定 YARN 应用。
+     *
+     * @param configuration Hadoop 客户端配置
+     * @param applicationId YARN 应用 ID
+     * @param diagnostics kill 诊断说明
+     * @throws IOException IO 异常
+     * @throws YarnException YARN 客户端异常
+     */
+    void killApplication(Configuration configuration, ApplicationId applicationId, String diagnostics)
+            throws IOException, YarnException;
+
+    /**
+     * 查询当前 ResourceManager 视角下的全部队列运行时信息。
+     *
+     * @param configuration Hadoop 客户端配置
+     * @return 队列信息列表
+     * @throws IOException IO 异常
+     * @throws YarnException YARN 客户端异常
+     */
+    List<QueueInfo> getAllQueues(Configuration configuration) throws IOException, YarnException;
+
+    /**
+     * 按可选节点状态查询当前 ResourceManager 视角下的 NodeManager 节点报告。
+     *
+     * @param configuration Hadoop 客户端配置
+     * @param states 节点状态过滤条件；为空数组时查询所有状态
+     * @return 节点报告列表
+     * @throws IOException IO 异常
+     * @throws YarnException YARN 客户端异常
+     */
+    List<NodeReport> getNodeReports(Configuration configuration, NodeState... states) throws IOException, YarnException;
 }

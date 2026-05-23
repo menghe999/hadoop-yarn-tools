@@ -6,6 +6,9 @@ import com.example.api.YarnApplicationsResponse;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.api.records.NodeReport;
+import org.apache.hadoop.yarn.api.records.NodeState;
+import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -227,6 +230,28 @@ public class YarnApplicationsQueryServiceTest {
                 return reports;
             }
             return Collections.singletonList(report());
+        }
+
+        @Override
+        public ApplicationReport getApplicationReport(Configuration configuration, ApplicationId applicationId)
+                throws IOException, YarnException {
+            return report();
+        }
+
+        @Override
+        public void killApplication(Configuration configuration, ApplicationId applicationId, String diagnostics)
+                throws IOException, YarnException {
+        }
+
+        @Override
+        public List<QueueInfo> getAllQueues(Configuration configuration) throws IOException, YarnException {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<NodeReport> getNodeReports(Configuration configuration, NodeState... states)
+                throws IOException, YarnException {
+            return Collections.emptyList();
         }
 
         private long limit;
