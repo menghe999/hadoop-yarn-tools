@@ -5,6 +5,7 @@
 - `feature-springboot-deploy` 分支已改为单模块 Java 8 Maven Spring Boot Web 常驻服务，入口是 `com.example.YarnToolsApplication`。
 - 当前分支不再保留 `YARNInteractiveClient` / `YarnLogs` CLI 入口；不要按 main 分支的交互式命令行客户端结构修改当前分支。
 - Web 接口目前包括 `POST /api/yarn/logs/download` 和 `GET /api/yarn/applications`，二者都通过 `clusterId` 读取服务端白名单集群配置。
+- `POST /api/yarn/logs/download` 只接受 `clusterId` 和 `applicationId`；服务端会先查询对应应用报告并自动解析提交用户，前端请求不得传 `user` 或 `appOwner`。
 
 ## 构建与验证
 
@@ -17,7 +18,7 @@
 ## 运行与发布
 
 - 这是常驻 HTTP 服务；开发时可用 `mvn spring-boot:run`，部署时解压 zip 后在分发包根目录用 `./run.sh` 启动、`./stop.sh` 停止。
-- `src/main/resources/application.yml` 通过 `yarn.logs.clusters.*` 配置服务端集群白名单；前端请求不能传 `yarn-config-dir`、keytab、`krb5.conf` 等本地路径。
+- `src/main/resources/application.yml` 通过 `yarn.logs.clusters.*` 配置服务端集群白名单；前端请求不能传 `yarn-config-dir`、keytab、`krb5.conf`、`user`、`appOwner` 等本地路径或提交用户字段。
 - `default` 集群的配置目录可通过 `YARN_CONFIG_DIR` 覆盖；Kerberos 集群通过 `YARN_KERBEROS_PRINCIPAL`、`YARN_KERBEROS_KEYTAB_PATH`、`YARN_KERBEROS_KRB5_PATH` 覆盖。
 - `GET /api/yarn/applications` 默认受 `yarn.logs.max-applications` 限制，环境变量 `YARN_MAX_APPLICATIONS` 可覆盖。
 - Hadoop 客户端固定加载 `core-site.xml`、`hdfs-site.xml`、`yarn-site.xml`；真实配置文件和 Kerberos 凭据不能提交。
